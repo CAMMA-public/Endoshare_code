@@ -1,0 +1,2 @@
+Resources/Externals/ffmpeg filter=lfs diff=lfs merge=lfs -text
+Resources/ckpt/oobnet_weights.h5 filter=lfs diff=lfs merge=lfs -text
