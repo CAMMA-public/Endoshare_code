@@ -1,3 +1,90 @@
+# =====================
+# Python
+# =====================
 __pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.dll
+
+# Virtual environment
+.venv/
+env/
+venv/
+
+# Byte-compiled / optimized / DLL files
 *.pyc
+*.pyo
+*.pyd
+*.pdb
+*.pdb
+
+# =====================
+# Build / packaging
+# =====================
+build/
+dist/
+*.egg-info/
+.eggs/
+*.spec
+
+# =====================
+# Logs / runtime files
+# =====================
+*.log
+*.tmp
+*.pid
+*.sqlite
+*.db
+
+# =====================
+# OS / IDE files
+# =====================
 .DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =====================
+# FFmpeg / external binaries
+# =====================
+Externals/
+ffmpeg/
+ffprobe/
+*.exe
+*.dll
+*.dylib
+*.so
+
+# =====================
+# TensorFlow / PyTorch / CUDA cache
+# =====================
+.cache/
+torch_cache/
+__pycache__/
+*.pt
+*.pth
+*.h5
+*.ckpt
+
+# =====================
+# PyQt / GUI assets (build artifacts)
+# =====================
+*.qrc.py
+*.pyqt_ui.py
+*.ui.py
+*.qmlc
+*.qmc
+
+# =====================
+# Environment and secrets
+# =====================
+.env
+.env.*
+*.key
+*.pem
+*.crt
+*.p12

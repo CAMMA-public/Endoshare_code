@@ -1,156 +1,157 @@
-import os
-import sys
-import json
-import time
-import math
-import shutil
-import platform
-import subprocess
-import datetime
-import secrets
-import csv
-from uuid import uuid4
-from copy import deepcopy
-from pathlib import Path
-
-import numpy as np
-import cv2
-import tensorflow as tf
-from tqdm import tqdm
-from loguru import logger
-from vidgear.gears import WriteGear
-
-from ..processing import deid
-import psutil
-import webbrowser
-
-from PyQt5.QtCore import (
-    QCoreApplication,
-    QPropertyAnimation,
-    QSize,
-    QTimer,
-    Qt,
-    QThread,
-    pyqtSignal,
-)
-from PyQt5.QtGui import (
-    QIcon,
-    QPen,
-    QPixmap,
-    QFontDatabase,
-    QColor,
-    QKeySequence,
-    QPainter,
-)
 from PyQt5.QtWidgets import (
-    QAction,
-    QApplication,
-    QComboBox,
-    QFormLayout,
-    QGroupBox,
-    QHBoxLayout,
-    QHeaderView,
-    QMainWindow,
-    QSizePolicy,
-    QSplashScreen,
-    QSplitter,
-    QStackedWidget,
-    QPushButton,
-    QToolButton,
     QVBoxLayout,
     QWidget,
-    QToolBar,
-    QTreeView,
     QScrollArea,
-    QFileDialog,
-    QListWidget,
-    QListWidgetItem,
-    QLabel,
-    QProgressBar,
-    QLineEdit,
-    QCheckBox,
-    QMessageBox,
-    QFileSystemModel,
+    QTextBrowser,
+    QFrame,
 )
-import slider
-import multiprocessing as mp
+from PyQt5.QtCore import Qt
 
-from ..utils.resources import (
-    resource_path,
-    load_icon,
-    tinted_icon,
-    ICON_COLORS,
-    FFMPEG_BIN,
-    FFPROBE_BIN,
-)
-from ..utils.types import ProcessingMode, ProcessingInterrupted
 class Info(QWidget):
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
+        self.project_url = "http://arbua.github.io/endoshare"
         self.init_ui()
-    
+
     def init_ui(self):
         layout = QVBoxLayout()
-        
-        # Formatted text
-        text = """
-        <h1>Endoshare: Streamlining Clinical Video Compliance and Accessibility</h1>
-        <p><b>Introduction:</b><br>
-        Endoscopic and laparoscopic procedures generate invaluable video recordings for clinical review, research, and education. However, the sharing and utilization of such videos present significant challenges, primarily due to stringent Institutional Review Board (IRB) regulations and the inherent sensitivity of patient data contained within these recordings. Endoshare addresses these challenges by providing a comprehensive solution for ensuring compliance with IRB regulations while facilitating seamless access to surgical videos for medical professionals.</p>
-        
-        <h2>Key Features:</h2>
-        <ol>
-            <li><b>Video Integration:</b><br>
-            Endoshare seamlessly integrates video files sourced from operating room systems, overcoming the fragmentation often encountered in traditional Operating Room Information Technology (ORIT) systems. By consolidating fragmented recordings into a single cohesive file, Endoshare streamlines the video preparation process, saving valuable time for clinicians.</li>
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(8)
 
-            <li><b>Deep Learning Image Classification:</b><br>
-            Utilizing cutting-edge deep learning technology, Endoshare employs an advanced image classifier to identify and blur sensitive patient information within surgical videos. This innovative approach ensures compliance with privacy regulations while preserving the educational and research value of the video content. The user-friendly interface of Endoshare empowers clinicians to effortlessly apply these privacy-enhancing measures, even without specialized technical expertise.</li>
+        self.text_browser = QTextBrowser()
+        self.text_browser.setOpenExternalLinks(True)
+        self.text_browser.setReadOnly(True)
+        self.text_browser.setFrameStyle(0)
+        self.text_browser.setAcceptRichText(True)
+        self.text_browser.setText(self._generate_html())
 
-            <li><b>Metadata Removal:</b><br>
-            In addition to image-based privacy protection, Endoshare incorporates robust metadata removal capabilities to further safeguard patient privacy. By eliminating metadata associated with surgical videos, Endoshare ensures that no identifiable patient information remains embedded within the video files. This comprehensive approach to data anonymization enables clinicians to confidently utilize deidentified videos for research, educational, and training purposes.</li>
-        </ol>
+        # Blend with parent/app background
+        self.text_browser.setStyleSheet("QTextBrowser { background: transparent; }")
 
-        <h2>Workflow:</h2>
-        <p>Endoshare simplifies the video preparation process into three intuitive steps:</p>
-        <ol>
-            <li><b>Video Merging:</b><br>
-            Clinicians can easily merge video files obtained from ORIT systems within Endoshare, consolidating fragmented recordings into a unified format.</li>
-
-            <li><b>Image Classification and Privacy Enhancement:</b><br>
-            Endoshare's deep learning-based image classifier automatically identifies and blurs sensitive patient information within the merged video. This step ensures compliance with privacy regulations while preserving the clinical relevance of the video content.</li>
-
-            <li><b>Metadata Removal:</b><br>
-            Endoshare removes metadata associated with the surgical videos, further enhancing patient privacy and compliance with regulatory requirements.</li>
-        </ol>
-
-        <p><b>Conclusion:</b><br>
-        With Endoshare, clinicians can confidently prepare surgical videos for research, education, and training purposes while ensuring compliance with IRB regulations and protecting patient privacy. By streamlining the process of video compliance and accessibility, Endoshare empowers medical professionals to leverage the full educational and research potential of surgical video recordings.</p>
-        
-        <p><b>Contact:</b><br>
-        For assistance, please contact: lorenzo.arboit@ext.ihu-strasbourg.eu</p>
-
-        <p><b>Licensing:</b><br>
-        This code is available for non-commercial scientific research purposes as defined in the CC BY-NC-SA 4.0.
-        By downloading and using this code you agree to the terms in the LICENSE.
-        Third-party codes are subject to their respective licenses.</p>
-
-        <p><b>Developed by:</b><br>
-        Research Group CAMMA, IHU Strasbourg, University of Strasbourg<br>
-        Website: <a href="http://camma.u-strasbg.fr">http://camma.u-strasbg.fr</a></p>
-        """
-
-        # Create QLabel with HTML formatted text
-        label = QLabel()
-        label.setText(text)
-        label.setWordWrap(True)
-
-        # Create QScrollArea and set QLabel as its widget
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
-        scroll_area.setStyleSheet("QScrollArea { border: none; }")
-        scroll_area.setWidget(label)
+        scroll_area.setWidget(self.text_browser)
+        scroll_area.setStyleSheet("QScrollArea { border: none; background: transparent; }")
+        scroll_area.setFrameShape(QFrame.NoFrame)
 
         layout.addWidget(scroll_area)
         self.setLayout(layout)
+        self.setAttribute(Qt.WA_StyledBackground, True)
 
+    def set_project_url(self, url: str):
+        self.project_url = url
+        self.text_browser.setText(self._generate_html())
+
+    def _generate_html(self) -> str:
+        return f"""
+        <style>
+          .info-container {{
+            font-family: system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+            max-width: 900px;
+            margin: 0;
+            line-height: 1.45;
+            color: #1f2d3d;
+          }}
+          h1 {{
+            font-size: 1.8em;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 4px;
+            margin-bottom: 8px;
+          }}
+          h2 {{
+            font-size: 1.4em;
+            margin-top: 1.2em;
+            margin-bottom: 6px;
+          }}
+          ul, ol {{
+            padding-left: 1.2em;
+            margin-top: 4px;
+          }}
+          .badge {{
+            display: inline-block;
+            background: #f0f5fb;
+            color: #1f2d3d;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 600;
+            margin-left: 4px;
+          }}
+          .inline-code {{
+            background: #f7f9fc;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: Menlo, Consolas, monospace;
+            font-size: 0.9em;
+          }}
+          a {{
+            color: #1a73e8;
+            text-decoration: none;
+          }}
+          a:hover {{
+            text-decoration: underline;
+          }}
+          .small {{
+            font-size: 0.9em;
+            color: #555;
+          }}
+          .section-box {{
+            padding: 10px 14px;
+            border-radius: 6px;
+            background: #f7f9fc;
+            margin-bottom: 10px;
+          }}
+          .footer {{
+            margin-top: 1.5em;
+            font-size: 0.85em;
+            color: #555;
+          }}
+        </style>
+
+        <div class="info-container" aria-label="Endoshare Information">
+          <h1>What Endoshare Does</h1>
+
+          <div class="section-box">
+            <h2>Core Function</h2>
+            <p>Endoshare prepares endoscopic and laparoscopic video recordings for use in research, education, and collaboration by automating consolidation and de-identification while preserving clinical utility.</p>
+          </div>
+
+          <div class="section-box">
+            <h2>Main Capabilities</h2>
+            <ul>
+              <li><strong>Video Consolidation:</strong> Automatically merges fragmented recordings from operating room systems into a single, coherent file to eliminate manual stitching.</li>
+              <li><strong>Visual Privacy Filtering:</strong> Applies a deep learning classifier to detect and blur sensitive visual content (e.g., patient identifiers or out-of-body regions), ensuring privacy without manual intervention.</li>
+              <li><strong>Metadata Sanitization:</strong> Strips embedded metadata from video files, removing hidden identifiers and reinforcing de-identification.</li>
+              <li><strong>Separation of Raw and Shared Data:</strong> Maintains original/source videos locally (or archived) while producing de-identified outputs safe for sharing with collaborators.</li>
+              <li><strong>Audit-ready Logging:</strong> Tracks processing sessions to support traceability and compliance review.</li>
+            </ul>
+          </div>
+
+          <div class="section-box">
+            <h2>How It Fits into Clinical Workflows</h2>
+            <p>Clinicians or research staff point Endoshare to source video folders, specify patient identifiers, and confirm selections. The system then merges, anonymizes visually and via metadata, and exports ready-to-use de-identified video packages, isolating sensitive information from sharable outputs.</p>
+          </div>
+
+          <div class="section-box">
+            <h2>Privacy</h2>
+            <p>Endoshare enforces a privacy-first pipeline: outputs are de-identified both visually and in metadata. Archive videos remain local, and they report patient name/ID for traceability. Processing activity is logged to support audit.</p>
+            <p class="small">Best practice: avoid concurrent modifications of input directories and retain versioned backups of raw data.</p>
+          </div>
+
+          <div class="section-box">
+            <h2>Support & Attribution</h2>
+            <p>Project website: <a href="{self.project_url}" target="_blank">{self.project_url}</a></p>
+            <p class="small">Developed by Research Group CAMMA, IHU Strasbourg, University of Strasbourg.</p>
+          </div>
+
+          <div class="section-box">
+            <h2>License</h2>
+            <p>Available for non-commercial scientific research under <strong>CC BY-NC-SA 4.0</strong>. Use implies agreement with the LICENSE file. Third-party components are governed by their own licenses.</p>
+          </div>
+
+          <div class="footer">
+            <div>Last updated: August 2025</div>
+          </div>
+        </div>
+        """

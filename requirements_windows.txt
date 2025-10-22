@@ -1,0 +1,15 @@
+# Requires Python 3.10 on Windows
+tensorflow-cpu==2.10.1
+numpy>=1.23,<2.0
+opencv-python<4.9
+PyQt5==5.15.11
+vidgear==0.3.3
+tqdm>=4.66
+requests>=2.31
+protobuf==3.19.6
+tensorboard<2.11
+pillow>=9.4
+loguru>=0.7
+colorlog>=6.8
+matplotlib==3.10.7
+psutil==7.1.1

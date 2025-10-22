@@ -1,89 +1,47 @@
 import os
-import sys
 import json
 import time
-import math
 import shutil
-import platform
-import subprocess
 import datetime
-import secrets
-import csv
-from uuid import uuid4
-from copy import deepcopy
 from pathlib import Path
-
-import numpy as np
 import cv2
-import tensorflow as tf
-from tqdm import tqdm
-from loguru import logger
-from vidgear.gears import WriteGear
 
-from ..processing import deid
+from loguru import logger
+
 import psutil
-import webbrowser
+from .video_browser import VideoBrowser
+from .video_threads import VideoCopyThread, VideoProcessThread, extract_vpt_args
 
 from PyQt5.QtCore import (
-    QCoreApplication,
-    QPropertyAnimation,
-    QSize,
     QTimer,
     Qt,
-    QThread,
-    pyqtSignal,
 )
 from PyQt5.QtGui import (
-    QIcon,
-    QPen,
-    QPixmap,
-    QFontDatabase,
     QColor,
-    QKeySequence,
-    QPainter,
 )
 from PyQt5.QtWidgets import (
-    QAction,
-    QApplication,
-    QComboBox,
-    QFormLayout,
-    QGroupBox,
     QHBoxLayout,
-    QHeaderView,
-    QMainWindow,
     QSizePolicy,
-    QSplashScreen,
-    QSplitter,
-    QStackedWidget,
     QPushButton,
-    QToolButton,
     QVBoxLayout,
     QWidget,
-    QToolBar,
-    QTreeView,
-    QScrollArea,
     QFileDialog,
     QListWidget,
     QListWidgetItem,
     QLabel,
     QProgressBar,
     QLineEdit,
-    QCheckBox,
     QMessageBox,
     QFileSystemModel,
 )
-import slider
-import multiprocessing as mp
 
 from ..utils.resources import (
     resource_path,
     load_icon,
-    tinted_icon,
-    ICON_COLORS,
-    FFMPEG_BIN,
-    FFPROBE_BIN,
 )
-from ..utils.types import ProcessingMode, ProcessingInterrupted
+
+from ..utils.types import ProcessingMode
+
 class VideoMergerApp(QWidget):
     def __init__(self, parent, controller):
         super().__init__(parent)
@@ -104,6 +62,8 @@ class VideoMergerApp(QWidget):
         self.video_browser_thread = None
         self.finished_threads = 0
         self.total_threads = 0
+
+        self.video_browser = VideoBrowser()
 
         self.init_ui()
 
@@ -142,6 +102,12 @@ class VideoMergerApp(QWidget):
         self.video_list.layout().addWidget(self.video_browser)
         layout.addWidget(self.video_list, 1)
 
+        # listen for mode changes from settings panel if available
+        settings_frame = self.controller.access_app_settings_frame()
+        if hasattr(settings_frame, "mode_changed"):
+            settings_frame.mode_changed.connect(self.update_ready_label)
+
+
         
         button_layout = QHBoxLayout()
 
@@ -161,6 +127,8 @@ class VideoMergerApp(QWidget):
 
         self.patient_list_label = QLabel("Ready to Process", self)
         layout.addWidget(self.patient_list_label)
+
+        self.update_ready_label()
 
         self.name_list = QListWidget(self)
         self.name_list.setFixedHeight(150)
@@ -433,7 +401,7 @@ class VideoMergerApp(QWidget):
         self.video_process_thread = VideoProcessThread(self.video_dict,
                                                        self.shared_folder,
                                                        self.local_folder,
-                                                       **self.controller.runtime_settings,
+                                                       **extract_vpt_args(self.controller.runtime_settings),
                                                        )
         self.select_button.setEnabled(False)
         self.add_button.setEnabled(False)
@@ -626,4 +594,10 @@ class VideoMergerApp(QWidget):
                 self.progress_label.setText("No patient selected.")
         else:
             logger.info("Patient removal cancelled")
+    
+    def update_ready_label(self, mode_str=None):
+        if mode_str is None:
+            mode = self.controller.runtime_settings.get("mode", ProcessingMode.NORMAL)
+            mode_str = "Fast" if mode == ProcessingMode.NORMAL else "Advanced"
+        self.patient_list_label.setText(f"Ready to Process in {mode_str} Mode")
 

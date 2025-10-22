@@ -2,8 +2,8 @@ import os
 import sys
 import multiprocessing as mp
 from PyQt5.QtCore import QCoreApplication, QSize, Qt
-from PyQt5.QtGui import QPixmap, QSplashScreen
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QApplication, QSplashScreen
 
 from .utils.resources import resource_path
 from .gui.main_window import MainApp

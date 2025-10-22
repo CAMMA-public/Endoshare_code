@@ -1,3 +1,8 @@
+import os
+
+from PyQt5.QtCore import pyqtSignal
+from ..utils.resources import resource_path
+
 class VideoProcessThread(QThread):
     update_progress = pyqtSignal(int, int, str, bool)
     update_color = pyqtSignal(str, str)
@@ -7,7 +12,7 @@ class VideoProcessThread(QThread):
         
         self.video_in_root_dir = video_in_root_dir 
         self.destination_folder = ""
-        self.ckpt_path = "ckpt/oobnet_weights.h5"   # "CKPT_PATH"  # "oobnet_weights.h5" ## needs to be changed with hone settings
+        self.ckpt_path = resource_path(os.path.join("ckpt", "oobnet_weights.h5"))
         self.device = "/cpu:0"
         self.out_final = shared_folder  ## needs to be changed with hone settings
         self.log_filename = os.path.join(local_folder, "./patientID_log.csv") ## needs to be changed from settings

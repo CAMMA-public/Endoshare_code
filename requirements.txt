@@ -1,8 +1,6 @@
 loguru
 PyQt5
 opencv-python
-numpy
-tensorflow
 tqdm
 vidgear
 matplotlib

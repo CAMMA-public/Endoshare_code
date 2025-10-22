@@ -5,7 +5,6 @@ Website: http://camma.u-strasbg.fr
 """
 
 import tensorflow as tf
-import os
 
 
 def preprocess(image, shape=[64, 64]):

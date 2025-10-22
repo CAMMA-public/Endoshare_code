@@ -5,10 +5,12 @@ from .model import build_model
 import matplotlib.pyplot as plt
 from pathlib import Path
 import sys
+from ..utils.resources import resource_path
+import os
 
 
 def _find_bundled_ckpt():
-    # inside a .app bundle: sys.executable → …/EndoShare.app/Contents/MacOS/EndoShare
+    # inside a .app bundle: use frozen logic
     if getattr(sys, "frozen", False):
         exe_dir = Path(sys.executable).parent
         resources = exe_dir.parent / "Resources"
@@ -19,11 +21,11 @@ def _find_bundled_ckpt():
                 return str(p)
         # fallback
         return str(resources / "ckpt" / "oobnet_weights.h5")
-    # running from source tree
-    here = Path(__file__).parent.parent
-    return str(here / "ckpt" / "oobnet_weights.h5")
+    # running from source tree: use resource_path to point into resources/ckpt
+    return resource_path(os.path.join("ckpt", "oobnet_weights.h5"))
 
 WEIGHTS_PATH = _find_bundled_ckpt()
+
 
 def preprocess(img):
     return tf.expand_dims(
@@ -55,14 +57,6 @@ def mk_plot(arr):
     plt.pcolormesh(arr)
 
 def delete_isolated_non_sensitive(arr):
-    # n = len(arr)
-    # if arr[0] == 0 and arr[1] == 1:
-    #     arr[0] = 1
-    # if arr[n - 1] == 0 and arr[n - 2] == 1:
-    #     arr[n - 1] = 1
-    # for j in range(1, len(arr) - 1):
-    #     if arr[j] == 0 and arr[j - 1] == 1 and arr[j + 1] == 1:
-    #         arr[j] = 1
     n = len(arr)
     # nothing to do if fewer than 2 frames
     if n < 2:

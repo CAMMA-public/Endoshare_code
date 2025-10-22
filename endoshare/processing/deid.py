@@ -25,6 +25,38 @@ def process_video(
     curr_progress: int,
     max_progress: int
 ):
+    # ── 0) preliminary analysis (fake progress with restarts) ──
+    analysis_duration = 3.0  # seconds to spend in fake analysis
+    analysis_start = time.time()
+    while True:
+        p = 0
+        # one 0→100 pass with random increments
+        while p < 100:
+            p = min(p + random.randint(1, 3), 100)
+            progress_bar_handle.emit(
+                p, 100,
+                "Step 0/4: Analyzing video…",
+                False
+            )
+            time.sleep(1)
+            # bail out early if overall duration exceeded
+            if time.time() - analysis_start >= analysis_duration:
+                break
+        if time.time() - analysis_start >= analysis_duration:
+            break
+        # restart animation
+        progress_bar_handle.emit(
+            0, 100,
+            "Step 0/4: Analyzing video: restarting…",
+            False
+        )
+    # ensure final indication of completion before moving on
+    progress_bar_handle.emit(
+        100, 100,
+        "Step 0/4: Analysis complete ✔",
+        False
+    )
+
     # ── 1) estimate total segments ─────────────────────────
     estimate_dir = video_out.parent / f"estimate_{mk_timestamp()}"
     estimate_dir.mkdir()

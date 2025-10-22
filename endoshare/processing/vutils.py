@@ -1,31 +1,9 @@
 import cv2
 import subprocess as sp
 from pathlib import Path
-import sys
-import os
 
+from ..utils.resources import FFMPEG_BIN
 
-def resource_path(relative_path):
-    """
-    Locate a bundled resource in Contents/Resources (or nested),
-    or fall back to the source-tree path.
-    """
-    base = os.path.abspath(os.path.dirname(__file__))
-    if getattr(sys, "frozen", False):
-        bundle_dir = os.path.dirname(sys.executable)
-        res_root   = os.path.abspath(os.path.join(bundle_dir, "..", "Resources"))
-        res_nested = os.path.join(res_root, "Resources")
-        res_macos  = bundle_dir
-        for candidate in (res_root, res_nested, res_macos):
-            p = os.path.join(candidate, relative_path)
-            if os.path.exists(p):
-                return p
-        return os.path.join(res_root, relative_path)
-    return os.path.join(base, relative_path)
-
-
-# point to your bundled ARM64 ffmpeg (which also contains ffprobe)
-FFMPEG_BIN  = resource_path("Externals/ffmpeg")
 FFPROBE_BIN = FFMPEG_BIN
 
 
