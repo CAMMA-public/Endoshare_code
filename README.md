@@ -103,12 +103,12 @@ wget https://s3.unistra.fr/camma_public/github/oobnet_detection/ckpt/oobnet_weig
 cd ../../../
 
 # 4. Install FFmpeg binaries
-# The FFmpeg executable must be placed inside: endoshare/Externals/ffmpeg/
+# The FFmpeg executable must be placed inside: endoshare/resources/Externals/ffmpeg/
 
 # ── macOS / Linux ────────────────────────────────
 # Create the folder and download the static build
-mkdir -p endoshare/Externals/ffmpeg
-cd endoshare/Externals/ffmpeg
+mkdir -p endoshare/resources/Externals/ffmpeg
+cd endoshare/resources/Externals/ffmpeg
 wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
 tar -xf ffmpeg-release-amd64-static.tar.xz
 mv ffmpeg-*-static/ffmpeg .
@@ -118,7 +118,7 @@ cd ../../../..
 # 1. Go to https://www.gyan.dev/ffmpeg/builds/
 # 2. Download "ffmpeg-git-full.7z"
 # 3. Extract it and copy the ffmpeg.exe binary into:
-#      endoshare\\Externals\\ffmpeg\\ffmpeg.exe
+#      endoshare\\resources\\Externals\\ffmpeg\\ffmpeg.exe
 
 # 5. Launch Endoshare
 python main.py
