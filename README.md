@@ -89,7 +89,7 @@ Simply download the appropriate version from the [official release page](https:/
 ```bash
 # 1. Clone the repository
 git clone https://github.com/CAMMA-public/Endoshare_code.git
-cd Endoshare
+cd Endoshare_code
 
 # 2. Install Python dependencies
 pip install -r requirements.txt
